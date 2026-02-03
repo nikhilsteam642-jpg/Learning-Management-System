@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ class_data.class_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<!-- CLASS HEADER -->
+<div class="section">
+    <h2>{{ class_data.class_name }}</h2>
+    <p>Class Code: {{ class_data.class_code }}</p>
+
+    {% if class_data.status == "completed" %}
+        <span class="status completed">✔ Completed</span>
+    {% else %}
+        <span class="status running">⏳ Running</span>
+    {% endif %}
+</div>
+
+<!-- COMPLETE CLASS / GENERATE REPORT -->
+<div class="section">
+    {% if is_admin and class_data.status != "completed" %}
+        <form action="/complete_class/{{ class_data.id }}" method="post">
+            <button style="background:red;color:white;">✅ Complete Class</button>
+        </form>
+    {% endif %}
+
+    {% if not is_admin and class_data.status == "completed" %}
+        <a href="/report/{{ class_data.id }}">
+    📄 Get Report
+</a>
+
+    {% endif %}
+</div>
+
+<!-- UPLOAD CONTENT -->
+{% if is_admin and class_data.status != "completed" %}
+<div class="section">
+    <h3>📤 Upload Content</h3>
+    <form action="/upload_content/{{ class_data.id }}" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="File title" required>
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- CLASS MATERIALS -->
+<div class="section">
+    <h3>📁 Class Materials</h3>
+
+    {% if contents %}
+  {% for c in contents %}
+    <p><strong>{{ c.title }}</strong></p>
+
+    {% if c.filetype in ["mp4","webm","ogg"] %}
+      <video width="400" controls>
+        <source src="/uploads/{{ c.filename }}">
+      </video>
+
+    {% elif c.filetype in ["jpg","jpeg","png"] %}
+      <img src="/uploads/{{ c.filename }}" width="300">
+
+    {% else %}
+      <a href="/uploads/{{ c.filename }}" target="_blank">
+        📄 Open {{ c.filename }}
+      </a>
+    {% endif %}
+
+    {% if not is_admin %}
+      <a href="/mark_content/{{ c.id }}" class="btn">
+        ✅ Mark as Completed
+      </a>
+    {% endif %}
+
+    <hr>
+  {% endfor %}
+{% else %}
+  <p>No content uploaded yet.</p>
+{% endif %}
+
+</div>
+
+<!-- MEMBERS -->
+<div class="section">
+    <h3>Members</h3>
+    <ul>
+    {% for m in members %}
+        <li>
+            👤 {{ m.name }}
+
+            {% if m.role == "teacher" %}
+                <strong style="color:green;">(Teacher)</strong>
+            {% else %}
+                <span style="color:blue;">(Student)</span>
+            {% endif %}
+
+            {% if is_admin and m.role != "teacher" %}
+                <a href="/remove_member/{{ class_data.id }}/{{ m.id }}" style="color:red;margin-left:10px;">
+                    ❌ Remove
+                </a>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+
+<!-- CREATE QUIZ -->
+{% if is_admin and class_data.status != "completed" %}
+<div class="section">
+    <h3>Create Quiz</h3>
+    <form action="/create_quiz/{{ class_data.id }}" method="post">
+        <input type="text" name="title" placeholder="Quiz Title (Quiz-1)" required>
+        <button type="submit">Create Quiz</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- QUIZZES -->
+<div class="section">
+    <h3>Quizzes</h3>
+
+        {% for q in quizzes %}
+            {% if is_admin %}
+                <div style="margin-bottom:10px;">
+                    <a href="/quiz/{{ q.id }}">📝 {{ q.title }} (Manage)</a>
+                    <br>
+                    <span style="font-size:14px; color:#333;">Completed by:</span>
+                    <ul style="margin:5px 0 10px 20px;">
+                        {% if quiz_completion[q.id]|length > 0 %}
+                            {% for name in quiz_completion[q.id] %}
+                                <li>{{ name }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li style="color:#888;">No students yet</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% else %}
+                {% if q.id in attempted_ids %}
+                    <p style="color: gray;">{{ q.title }} (Attempted)</p>
+                {% else %}
+                    {% if class_data.status != "completed" %}
+                        <a href="/attempt_quiz/{{ q.id }}">📝 {{ q.title }}</a>
+                    {% else %}
+                        <p style="color: gray;">{{ q.title }} (Closed)</p>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+</div>
+
+<a href="/dashboard" class="btn">⬅ Back</a>
+
+</div>
+</body>
+</html>

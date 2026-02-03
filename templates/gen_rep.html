@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Class Report</title>
+</head>
+<body>
+
+<h2>📄 Class Report</h2>
+
+<p><strong>Student:</strong> {{ user.name }}</p>
+<p><strong>Class:</strong> {{ class_data.class_name }}</p>
+<p><strong>Status:</strong> 
+  <span style="color:green;">✔ Completed</span>
+</p>
+
+<hr>
+
+<p>Total Quizzes: {{ total_quizzes }}</p>
+<p>Attempted Quizzes: {{ attempted_quizzes }}</p>
+
+<br>
+<a href="/dashboard">⬅ Back</a>
+
+</body>
+</html>

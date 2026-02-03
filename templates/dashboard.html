@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LMS Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="hamburger" onclick="toggleMenu()">☰</span>
+  <span class="logo"><b>LEARNING MANAGEMENT SYSTEM 🎓</b></span>
+  <span class="welcome">Welcome, {{ name }}</span>
+</div>
+
+<!-- SIDE MENU -->
+<div id="menu" class="menu">
+  <a href="/dashboard">🏠 Dashboard</a>
+
+  {% if role == "teacher" %}
+    <a href="/report">📊 Teacher Report</a>
+    <a href="/analysis">📊 Analysis</a>
+    <a href="/requests">📩 Requests</a>
+  {% else %}
+    <a href="/report">📊 My Report</a>
+    <a href="/analysis">📊 Analysis</a>
+    <a href="/browse_classes">🔍 Browse Classes</a>
+  {% endif %}
+
+  <a href="/logout">🚪 Sign Out</a>
+</div>
+
+<!-- TOP ROW -->
+<div class="top-row">
+
+{% if role == "teacher" %}
+<div class="card">
+  <h3>Create Class</h3>
+  <form method="POST" action="/dashboard">
+    <input type="text" name="class_name" required>
+    <button>Create</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Join Class (Code)</h3>
+  <form method="POST" action="/join_class">
+    <input type="text" name="class_code" required>
+    <button>Join</button>
+  </form>
+</div>
+
+</div>
+
+<!-- MY CLASSES -->
+<div class="box">
+  <h3>📚 My Classes</h3>
+
+  {% if classes|length == 0 %}
+    <p>You have not joined any classes yet.</p>
+  {% else %}
+    {% for c in classes %}
+      <div class="class-item">
+        <h4>{{ c.class_name }}</h4>
+        <p>Code: {{ c.class_code }}</p>
+        <a href="/class/{{ c.id }}" class="btn">Open</a>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+function toggleMenu() {
+  document.getElementById("menu").classList.toggle("show");
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Feedback</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="feedback-container">
+
+  <h1>📊 Quiz Feedback</h1>
+
+  <div class="score-card">
+    <h2>Your Score</h2>
+    <p class="score">{{ score }} / {{ total }}</p>
+  </div>
+
+  {% if score >= total/2 %}
+    <p class="message success">🎉 Great job! You passed the quiz!</p>
+  {% else %}
+    <p class="message fail">💡 Keep practicing, you’ll improve!</p>
+  {% endif %}
+
+  <a href="/dashboard" class="btn">⬅ Back to Dashboard</a>
+
+</div>
+
+</body>
+</html>

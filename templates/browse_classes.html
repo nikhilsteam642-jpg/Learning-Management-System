@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browse Classes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">🔍 Browse Classes</span>
+</div>
+
+<div class="browse-container">
+
+  {% if all_classes|length == 0 %}
+    <p class="empty-text">No new classes available 🚫</p>
+  {% endif %}
+
+  {% for c in all_classes %}
+    <div class="browse-card">
+      <h3>{{ c.class_name }}</h3>
+      <p>Teacher: {{ c.teacher_name }}</p>
+
+      <form action="/request_join/{{ c.id }}" method="post">
+        <button class="btn">Enroll</button>
+      </form>
+    </div>
+  {% endfor %}
+
+</div>
+
+<a href="/dashboard" class="back-btn">⬅ Back</a>
+
+</body>
+</html>

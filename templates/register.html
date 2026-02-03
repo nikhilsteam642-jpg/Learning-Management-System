@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS | Create Account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Registration-specific styling to ensure the dropdown matches your input fixes */
+        .auth-card select {
+            width: 100%;
+            height: 34px !important; /* Matches your input height fix */
+            padding: 4px 10px !important;
+            margin-bottom: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #cfc7ff !important;
+            background-color: white;
+            outline: none;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .auth-card select:focus {
+            border-color: #5a38ff;
+        }
+
+        /* Ensuring the form layout is vertical */
+        .auth-card form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Tagline styling */
+        .subtitle {
+            font-size: 14px;
+            margin-bottom: 18px;
+            color: #6a6a6a;
+        }
+    </style>
+</head>
+<body class="auth-body">
+
+    <div class="auth-card">
+        <h1>📝 Create Account</h1>
+        <p class="subtitle">Join the learning universe 🌍</p>
+
+        <form method="POST">
+            <input type="text" name="name" placeholder="Full Name" required>
+            
+            <input type="email" name="email" placeholder="Email Address" required>
+            
+            <input type="password" name="password" placeholder="Password" required>
+
+            <select name="role" required>
+                <option value="" disabled selected>Select Your Role</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+            </select>
+
+            <button type="submit" class="auth-btn">Register</button>
+        </form>
+
+        <p class="link-text">
+            Already registered? <a href="/">Login</a>
+        </p>
+    </div>
+
+</body>
+</html>

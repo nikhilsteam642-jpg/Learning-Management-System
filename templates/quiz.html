@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="quiz-container">
+
+    <h2>📝 Quiz: {{ quiz.title }}</h2>
+
+    <!-- ADD QUESTION FORM (Teacher only) -->
+    <form method="POST" class="question-form">
+
+        <input type="text" name="question" placeholder="Enter Question" required>
+
+        <input type="text" name="option1" placeholder="Option 1" required>
+        <input type="text" name="option2" placeholder="Option 2" required>
+        <input type="text" name="option3" placeholder="Option 3" required>
+        <input type="text" name="option4" placeholder="Option 4" required>
+
+        <select name="answer" required>
+            <option value="">Select Correct Answer</option>
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+            <option value="option3">Option 3</option>
+            <option value="option4">Option 4</option>
+        </select>
+
+        <button type="submit">➕ Add Question</button>
+    </form>
+
+    <hr>
+
+    <!-- SHOW QUESTIONS -->
+    <h3>📚 Questions Added</h3>
+
+    {% if questions %}
+        <ul class="question-list">
+        {% for q in questions %}
+            <li>
+                <strong>{{ loop.index }}. {{ q.question }}</strong>
+                <ul>
+                    <li>A) {{ q.option1 }}</li>
+                    <li>B) {{ q.option2 }}</li>
+                    <li>C) {{ q.option3 }}</li>
+                    <li>D) {{ q.option4 }}</li>
+                </ul>
+                <p>✅ Answer: {{ q.answer }}</p>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No questions yet.</p>
+    {% endif %}
+
+    <br>
+    <a href="/class/{{ quiz.class_id }}" class="btn">⬅ Back to Class</a>
+
+</div>
+
+</body>
+</html>

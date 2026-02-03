@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LMS | Attempt Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="quiz-body">
+
+<div class="quiz-container">
+    <h2 class="quiz-title">📝 Attempt Quiz</h2>
+
+    <form method="POST">
+        {% for q in questions %}
+        <div class="question-section">
+            <h3 class="question-text">{{ loop.index }}. {{ q.question }}</h3>
+
+            <div class="options-grid">
+                <label class="option-box">
+                    <input type="radio" name="{{ q.id }}" value="option1" required>
+                    <span>{{ q.option1 }}</span>
+                </label>
+
+                <label class="option-box">
+                    <input type="radio" name="{{ q.id }}" value="option2">
+                    <span>{{ q.option2 }}</span>
+                </label>
+
+                <label class="option-box">
+                    <input type="radio" name="{{ q.id }}" value="option3">
+                    <span>{{ q.option3 }}</span>
+                </label>
+
+                <label class="option-box">
+                    <input type="radio" name="{{ q.id }}" value="option4">
+                    <span>{{ q.option4 }}</span>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="form-footer">
+            <button type="submit" class="submit-btn">Submit Quiz</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>
