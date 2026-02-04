@@ -363,6 +363,235 @@ def attempt_quiz(quiz_id):
     conn.close()
     return render_template("attempt_quiz.html", questions=questions)
 
+@app.route("/analysis")
+def analysis():
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    user_id = session["user_id"]
+    role = session["role"]
+
+    if role == "teacher":
+        cur.execute("""
+            SELECT quizzes.id, quizzes.title, classes.class_name
+            FROM quizzes
+            JOIN classes ON quizzes.class_id = classes.id
+            WHERE classes.admin_id=%s
+        """,(user_id,))
+    else:
+        cur.execute("""
+            SELECT quizzes.id, quizzes.title, classes.class_name
+            FROM submissions
+            JOIN quizzes ON submissions.quiz_id = quizzes.id
+            JOIN classes ON quizzes.class_id = classes.id
+            WHERE submissions.user_id=%s
+        """,(user_id,))
+
+    quizzes = cur.fetchall()
+    conn.close()
+
+    return render_template("analysis.html", quizzes=quizzes, role=role)
+
+
+@app.route("/quiz_stats/<int:quiz_id>")
+def quiz_stats(quiz_id):
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT quizzes.id, quizzes.title, classes.class_name
+        FROM quizzes
+        JOIN classes ON quizzes.class_id = classes.id
+        WHERE quizzes.id=%s
+    """,(quiz_id,))
+    quiz = cur.fetchone()
+
+    cur.execute("""
+        SELECT score FROM submissions
+        WHERE quiz_id=%s AND user_id=%s
+    """,(quiz_id, session["user_id"]))
+    submission = cur.fetchone()
+
+    conn.close()
+
+    my_score = submission["score"] if submission else ""
+
+    return render_template("quiz_stats.html", quiz=quiz, my_score=my_score)
+
+@app.route("/report")
+def report():
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    user_id = session["user_id"]
+    role = session["role"]
+
+    if role == "student":
+        cur.execute("""
+            SELECT classes.id, classes.class_name
+            FROM classes
+            JOIN class_members ON classes.id = class_members.class_id
+            WHERE class_members.user_id=%s AND classes.status='running'
+        """,(user_id,))
+        running = cur.fetchall()
+
+        cur.execute("""
+            SELECT classes.class_name
+            FROM classes
+            JOIN class_members ON classes.id = class_members.class_id
+            WHERE class_members.user_id=%s AND classes.status='completed'
+        """,(user_id,))
+        completed = cur.fetchall()
+
+        progress_data = []
+        for c in running:
+            class_id = c["id"]
+
+            cur.execute("SELECT COUNT(*) AS count FROM quizzes WHERE class_id=%s",(class_id,))
+            total_quizzes = cur.fetchone()["count"]
+
+            cur.execute("""
+                SELECT COUNT(*) AS count FROM submissions
+                WHERE user_id=%s AND quiz_id IN
+                (SELECT id FROM quizzes WHERE class_id=%s)
+            """,(user_id,class_id))
+            attempted_quizzes = cur.fetchone()["count"]
+
+            cur.execute("SELECT COUNT(*) AS count FROM contents WHERE class_id=%s",(class_id,))
+            total_contents = cur.fetchone()["count"]
+
+            cur.execute("""
+                SELECT COUNT(*) AS count FROM content_progress
+                WHERE user_id=%s AND content_id IN
+                (SELECT id FROM contents WHERE class_id=%s)
+            """,(user_id,class_id))
+            completed_contents = cur.fetchone()["count"]
+
+            total = total_quizzes + total_contents
+            done = attempted_quizzes + completed_contents
+            progress = int((done/total)*100) if total>0 else 0
+
+            progress_data.append({"class_name": c["class_name"], "progress": progress})
+
+        conn.close()
+        return render_template("report.html",
+            role=role,
+            completed=completed,
+            running=running,
+            progress_data=progress_data
+        )
+
+    # -------- TEACHER --------
+    else:
+        cur.execute("""
+            SELECT id, class_name FROM classes
+            WHERE admin_id=%s AND status='running'
+        """,(user_id,))
+        running_classes = cur.fetchall()
+
+        cur.execute("""
+            SELECT id, class_name FROM classes
+            WHERE admin_id=%s AND status='completed'
+        """,(user_id,))
+        completed_list = cur.fetchall()
+
+        teacher_data = []
+        for c in running_classes:
+            class_id = c["id"]
+
+            cur.execute("SELECT COUNT(*) AS count FROM contents WHERE class_id=%s",(class_id,))
+            file_count = cur.fetchone()["count"]
+
+            cur.execute("SELECT COUNT(*) AS count FROM videos WHERE class_id=%s",(class_id,))
+            video_count = cur.fetchone()["count"]
+
+            cur.execute("SELECT COUNT(*) AS count FROM quizzes WHERE class_id=%s",(class_id,))
+            quiz_count = cur.fetchone()["count"]
+
+            teacher_data.append({
+                "class_name": c["class_name"],
+                "total_uploads": file_count + video_count,
+                "total_quizzes": quiz_count
+            })
+
+        conn.close()
+        return render_template("report.html",
+            role=role,
+            running=running_classes,
+            completed=completed_list,
+            teacher_data=teacher_data
+        )
+
+@app.route("/upload_video/<int:class_id>", methods=["POST"])
+def upload_video(class_id):
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM classes WHERE id=%s",(class_id,))
+    class_data = cur.fetchone()
+
+    if class_data["admin_id"] != session["user_id"]:
+        return "Access Denied"
+
+    title = request.form["title"]
+    video = request.files["video"]
+
+    filename = secure_filename(video.filename)
+    video.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+    cur.execute("""
+        INSERT INTO videos(class_id,title,filename)
+        VALUES (%s,%s,%s)
+    """,(class_id,title,filename))
+
+    conn.commit()
+    conn.close()
+    return redirect(f"/class/{class_id}")
+
+
+@app.route("/upload_content/<int:class_id>", methods=["POST"])
+def upload_content(class_id):
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM classes WHERE id=%s",(class_id,))
+    class_data = cur.fetchone()
+
+    if class_data["admin_id"] != session["user_id"]:
+        return "Access Denied"
+
+    title = request.form["title"]
+    file = request.files["file"]
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(filepath)
+
+    filetype = filename.split(".")[-1].lower()
+
+    cur.execute("""
+        INSERT INTO contents(class_id,title,filename,filetype)
+        VALUES (%s,%s,%s,%s)
+    """,(class_id,title,filename,filetype))
+
+    conn.commit()
+    conn.close()
+    return redirect(f"/class/{class_id}")
 
 if __name__=="__main__":
     port = int(os.environ.get("PORT",5000))
