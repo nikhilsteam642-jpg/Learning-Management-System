@@ -2,6 +2,7 @@ import os, random, string
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, render_template, request, redirect, session
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "lms_secret_key"
