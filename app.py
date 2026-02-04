@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "lms_secret_key"
 
-DATABASE_URL = os.environ.get("postgresql://nikhilgit:qexVCyfv0wlHPndqwdbheBw8EnWw68Ri@dpg-d612jqkoud1c738540hg-a/lms_db_m89x")
+DATABASE_URL = os.environ.get("postgresql://nikhilgit:qexVCyfv0wlHPndqwdbheBw8EnWw68Ri@dpg-d612jqkoud1c738540hg-a.singapore-postgres.render.com/lms_db_m89x")
 
 def get_db():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
