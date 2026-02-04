@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, session
 app = Flask(__name__)
 app.secret_key = "lms_secret_key"
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("postgresql://nikhilgit:qexVCyfv0wlHPndqwdbheBw8EnWw68Ri@dpg-d612jqkoud1c738540hg-a/lms_db_m89x")
 
 def get_db():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
